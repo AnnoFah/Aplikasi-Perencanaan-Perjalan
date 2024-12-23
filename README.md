@@ -1,3 +1,0 @@
-# Aplikasi-Perencanaan-Perjalan
-
-UAP
