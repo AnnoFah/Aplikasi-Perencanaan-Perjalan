@@ -64,6 +64,8 @@ public class PerencanaanPerjalananApp extends Application {
         layout.setSpacing(10);
         layout.setPadding(new Insets(10));
         layout.getChildren().addAll(table, imageContainer);
+        HBox.setHgrow(table, Priority.ALWAYS); // Membuat tabel mengisi ruang kosong
+        HBox.setHgrow(imageContainer, Priority.ALWAYS); // Membuat kontainer gambar mengisi ruang kosong
 
         // ToolBar
         Button addButton = new Button("Tambah Perjalanan");
@@ -142,7 +144,7 @@ public class PerencanaanPerjalananApp extends Application {
 
         pilihGambarButton.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", ".png", ".jpg", "*.jpeg"));
             File file = fileChooser.showOpenDialog(stage);
             if (file != null) {
                 gambarField.setText(file.getAbsolutePath());
