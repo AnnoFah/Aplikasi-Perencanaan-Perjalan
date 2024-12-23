@@ -39,6 +39,16 @@ public class PerencanaanPerjalananApp extends Application {
         tarifTransportasi.put("Pesawat", 5000); // Tarif untuk Pesawat per km
     }
 
+    // Getter untuk jarak antar kota
+    public static Map<String, Map<String, Integer>> getJarakAntarKota() {
+        return jarakAntarKota;
+    }
+
+    // Getter untuk tarif transportasi
+    public static Map<String, Integer> getTarifTransportasi() {
+        return tarifTransportasi;
+    }
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Aplikasi Perencanaan Perjalanan");
@@ -205,10 +215,6 @@ public class PerencanaanPerjalananApp extends Application {
         scene.getRoot().setStyle("-fx-base: #f9f9f9; -fx-background: white; -fx-text-base-color: black;");
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     public static class TravelPlan {
         private final String asal;
         private final String destinasi;
@@ -249,5 +255,9 @@ public class PerencanaanPerjalananApp extends Application {
         public int getBiayaRekomendasi() {
             return biayaRekomendasi;
         }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }
