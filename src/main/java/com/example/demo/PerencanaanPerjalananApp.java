@@ -245,6 +245,14 @@ public class PerencanaanPerjalananApp extends Application {
         scene.getRoot().setStyle("-fx-base: #f9f9f9; -fx-background: white; -fx-text-base-color: black;");
     }
 
+    public boolean isDarkMode() {
+        return darkMode;
+    }
+
+    public void setDarkMode(boolean darkMode) {
+        this.darkMode = darkMode;
+    }
+
     public static class TravelPlan {
         private final String asal;
         private final String destinasi;
