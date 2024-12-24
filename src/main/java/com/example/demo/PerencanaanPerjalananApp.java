@@ -7,9 +7,13 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,28 +29,16 @@ public class PerencanaanPerjalananApp extends Application {
     private static final Map<String, Integer> tarifTransportasi = new HashMap<>();
 
     static {
-        // Mengisi data jarak antar kota
         jarakAntarKota.put("Jakarta", Map.of("Surabaya", 780, "Bandung", 150, "Yogyakarta", 530));
         jarakAntarKota.put("Surabaya", Map.of("Jakarta", 780, "Yogyakarta", 330, "Bandung", 725));
         jarakAntarKota.put("Bandung", Map.of("Jakarta", 150, "Surabaya", 725, "Yogyakarta", 410));
         jarakAntarKota.put("Yogyakarta", Map.of("Jakarta", 530, "Surabaya", 330, "Bandung", 410));
 
-        // Mengisi tarif per kilometer
-        tarifTransportasi.put("Mobil", 2000);  // Tarif untuk Mobil per km
-        tarifTransportasi.put("Motor", 1500); // Tarif untuk Motor per km
-        tarifTransportasi.put("Bus", 1000);   // Tarif untuk Bus per km
-        tarifTransportasi.put("Kereta", 500); // Tarif untuk Kereta per km
-        tarifTransportasi.put("Pesawat", 5000); // Tarif untuk Pesawat per km
-    }
-
-    // Getter untuk jarak antar kota
-    public static Map<String, Map<String, Integer>> getJarakAntarKota() {
-        return jarakAntarKota;
-    }
-
-    // Getter untuk tarif transportasi
-    public static Map<String, Integer> getTarifTransportasi() {
-        return tarifTransportasi;
+        tarifTransportasi.put("Mobil", 2000);
+        tarifTransportasi.put("Motor", 1500);
+        tarifTransportasi.put("Bus", 1000);
+        tarifTransportasi.put("Kereta", 500);
+        tarifTransportasi.put("Pesawat", 5000);
     }
 
     @Override
@@ -66,17 +58,20 @@ public class PerencanaanPerjalananApp extends Application {
         Button deleteButton = new Button("Hapus Perjalanan");
         deleteButton.setOnAction(e -> hapusPerjalanan());
 
+        Button viewGalleryButton = new Button("Lihat Galeri");
+        viewGalleryButton.setOnAction(e -> tampilkanGaleri(primaryStage));
+
         Button toggleDarkModeButton = new Button("Mode Gelap");
         toggleDarkModeButton.setOnAction(e -> toggleDarkMode(primaryStage.getScene()));
 
-        ToolBar toolBar = new ToolBar(addButton, deleteButton, toggleDarkModeButton);
+        ToolBar toolBar = new ToolBar(addButton, deleteButton, viewGalleryButton, toggleDarkModeButton);
 
         BorderPane mainLayout = new BorderPane();
         mainLayout.setTop(toolBar);
         mainLayout.setCenter(table);
 
-        Scene scene = new Scene(mainLayout, 1000, 600); // Ukuran aplikasi
-        applyLightMode(scene); // Default menggunakan mode terang
+        Scene scene = new Scene(mainLayout, 1000, 600);
+        applyLightMode(scene);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -102,11 +97,15 @@ public class PerencanaanPerjalananApp extends Application {
         jarakCol.setCellValueFactory(new PropertyValueFactory<>("jarak"));
         jarakCol.setMinWidth(100);
 
-        TableColumn<TravelPlan, Integer> biayaCol = new TableColumn<>("Biaya Rekomendasi (IDR)");
+        TableColumn<TravelPlan, Integer> biayaCol = new TableColumn<>("Biaya (IDR)");
         biayaCol.setCellValueFactory(new PropertyValueFactory<>("biayaRekomendasi"));
         biayaCol.setMinWidth(150);
 
-        table.getColumns().addAll(asalCol, destinasiCol, tanggalCol, transportasiCol, jarakCol, biayaCol);
+        TableColumn<TravelPlan, String> gambarCol = new TableColumn<>("Gambar");
+        gambarCol.setCellValueFactory(new PropertyValueFactory<>("gambarPath"));
+        gambarCol.setMinWidth(200);
+
+        table.getColumns().addAll(asalCol, destinasiCol, tanggalCol, transportasiCol, jarakCol, biayaCol, gambarCol);
         table.setItems(travelPlans);
     }
 
@@ -127,6 +126,9 @@ public class PerencanaanPerjalananApp extends Application {
         jarakField.setDisable(true);
         TextField biayaField = new TextField();
         biayaField.setDisable(true);
+        TextField gambarPathField = new TextField();
+        gambarPathField.setDisable(true);
+        Button pilihGambarButton = new Button("Pilih Gambar");
 
         asalComboBox.setOnAction(e -> {
             String asal = asalComboBox.getValue();
@@ -148,6 +150,14 @@ public class PerencanaanPerjalananApp extends Application {
             }
         });
 
+        pilihGambarButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            File file = fileChooser.showOpenDialog(stage);
+            if (file != null) {
+                gambarPathField.setText(file.getAbsolutePath());
+            }
+        });
+
         grid.add(new Label("Asal:"), 0, 0);
         grid.add(asalComboBox, 1, 0);
         grid.add(new Label("Destinasi:"), 0, 1);
@@ -160,6 +170,9 @@ public class PerencanaanPerjalananApp extends Application {
         grid.add(jarakField, 1, 4);
         grid.add(new Label("Biaya (IDR):"), 0, 5);
         grid.add(biayaField, 1, 5);
+        grid.add(new Label("Gambar:"), 0, 6);
+        grid.add(gambarPathField, 1, 6);
+        grid.add(pilihGambarButton, 2, 6);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -171,20 +184,37 @@ public class PerencanaanPerjalananApp extends Application {
                 String transportasi = transportasiComboBox.getValue();
                 int jarak = Integer.parseInt(jarakField.getText());
                 int biayaRekomendasi = Integer.parseInt(biayaField.getText());
+                String gambarPath = gambarPathField.getText();
 
-                return new TravelPlan(
-                        asal,
-                        destinasi,
-                        tanggalPicker.getValue().toString(),
-                        transportasi,
-                        jarak,
-                        biayaRekomendasi
-                );
+                return new TravelPlan(asal, destinasi, tanggalPicker.getValue().toString(), transportasi, jarak, biayaRekomendasi, gambarPath);
             }
             return null;
         });
 
         dialog.showAndWait().ifPresent(travelPlans::add);
+    }
+
+    private void tampilkanGaleri(Stage stage) {
+        TravelPlan selectedPlan = table.getSelectionModel().getSelectedItem();
+        if (selectedPlan == null || selectedPlan.getGambarPath() == null || selectedPlan.getGambarPath().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Tidak ada gambar yang dipilih!");
+            alert.show();
+            return;
+        }
+
+        Image image = new Image("file:" + selectedPlan.getGambarPath());
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(600);
+        imageView.setFitHeight(400);
+        imageView.setPreserveRatio(true);
+
+        Stage galleryStage = new Stage();
+        galleryStage.setTitle("Galeri Perjalanan");
+        VBox root = new VBox(imageView);
+        root.setPadding(new Insets(10));
+        Scene scene = new Scene(root, 600, 400);
+        galleryStage.setScene(scene);
+        galleryStage.show();
     }
 
     private void hapusPerjalanan() {
@@ -222,14 +252,16 @@ public class PerencanaanPerjalananApp extends Application {
         private final String transportasi;
         private final int jarak;
         private final int biayaRekomendasi;
+        private final String gambarPath;
 
-        public TravelPlan(String asal, String destinasi, String tanggal, String transportasi, int jarak, int biayaRekomendasi) {
+        public TravelPlan(String asal, String destinasi, String tanggal, String transportasi, int jarak, int biayaRekomendasi, String gambarPath) {
             this.asal = asal;
             this.destinasi = destinasi;
             this.tanggal = tanggal;
             this.transportasi = transportasi;
             this.jarak = jarak;
             this.biayaRekomendasi = biayaRekomendasi;
+            this.gambarPath = gambarPath;
         }
 
         public String getAsal() {
@@ -254,6 +286,10 @@ public class PerencanaanPerjalananApp extends Application {
 
         public int getBiayaRekomendasi() {
             return biayaRekomendasi;
+        }
+
+        public String getGambarPath() {
+            return gambarPath;
         }
     }
 
